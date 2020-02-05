@@ -1,4 +1,4 @@
-module github.com/matang28/kuberesolver
+module github.com/matang28/kuberesolver/v2
 
 go 1.11
 
