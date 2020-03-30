@@ -108,11 +108,22 @@ func getEndpoints(client K8sClient, namespace, targetName string) (Endpoints, er
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return Endpoints{}, fmt.Errorf("invalid response code %d", resp.StatusCode)
+		return Endpoints{}, fmt.Errorf("invalid response code %d. %s", resp.StatusCode, asFailedRequestMessage(req, resp))
 	}
 	result := Endpoints{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	return result, err
+}
+
+func asFailedRequestMessage(req *http.Request, response *http.Response) string {
+	var body string
+	if response.Body != nil {
+		if bbytes, _ := ioutil.ReadAll(response.Body); bbytes != nil {
+			body = string(bbytes)
+		}
+	}
+	return fmt.Sprintf("failed to %s on %s, returned %d status code with body: `%s`",
+		strings.ToUpper(req.Method), req.URL.String(), response.StatusCode, body)
 }
 
 func watchEndpoints(client K8sClient, namespace, targetName string) (watchInterface, error) {
